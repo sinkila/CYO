@@ -837,6 +837,7 @@ train_set <- combined_df %>%
 
 # Transforming the train & test set to time series format for analysis and 
 # model development
+# Adding metric of seven-day average for cases per 100 000 inhabitants
 train_n_test_set_data <- train_set %>%
   dplyr::select(wdate, 
                 year_week, 
@@ -966,7 +967,7 @@ GGally::ggpairs(as.data.frame(train_n_test_set_tsdata[,3:8]))
 
 # Looking at the confirmed cases and deaths per 100 000 inhabitants
 autoplot(train_n_test_set_tsdata[,10:11]) +
-  ylab("Weekly number") + xlab("Week")+
+  ylab("Number reported") + xlab("Week")+
   ggtitle("The confirmed cases and deaths per 100k")
 
 # Adjusted case rate seven-day average for cases per 100 000 per 100 000 inhabitants
@@ -1361,6 +1362,9 @@ mean_var <- forecast_mv[["forecast"]][["nr_confirmed"]][["mean"]]
 # Creating the combined model from the means
 Combination <- (mean_naive + mean_ses + mean_arima + mean_var)/4
 
+# Check residuals
+# checkresiduals(Combination)
+# Produces an error "Could not find appropriate degrees of freedom for this model."
 
 # plot results and the test data
 plot_combined <- autoplot(Combination, series="Combination mean point forecast", ylab="Test set") + 

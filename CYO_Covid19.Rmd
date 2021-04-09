@@ -97,9 +97,9 @@ For this project I chose to analyze the Finnish Covid-19 open data available on 
 
 I am also aware that to a lot of people the whole topic of Covid-19 might be something they don't want to hear about anymore. However, here in Finland, where we have had it pretty easy up until Christmas 2020, the topic of forecasting the Covid-19 epidemic infection rate is now a hot topic. As a result of our fairly low numbers of confirmed Covid-19 cases compared e.g. to our neighbors Sweden and Russia, we did not have lock downs, mandatory testing on our boarders or mask requirements. In hindsight, this turned out to be a liability as the virus variants started spreading. Now we have the highest number of confirmed Covid-19 cases and hospitalized patients since the beginning of the pandemic.
 
-Our liberal constitution and legal system was not prepared for the need to restrict contacts or enforce mandatory testing on the boarders. The need to change the legislation, and enforce a lock down for the first time since the beginning of the pandemic, has been justified with forecast models created by the Finnish Institute of Health and Welfare (THL) data scientists in co-operation with the local universities. The models referenced by the current government forecast exponential growth in Covid-19 infections.
+Our liberal constitution and legal system was not prepared for the need to restrict contacts or enforce mandatory testing on the boarders. The need to change the legislation, and enforce a lock down for the first time since the beginning of the pandemic, has been justified with forecast models created by the Finnish Institute of Health and Welfare (THL) data scientists in co-operation with the local universities. The models referenced by the Finnish government in early March 2021 gave forecasts with exponential growth in Covid-19 infections.
 
-This situation and the need to better understand what the data was telling, got me started on this project topic. I did realize that my knowledge on the field of infectious disease and in time series forecasting is very limited, but I took that as a learining opportunity.
+This situation and the need to better understand what the data was telling, got me started on this project topic. I did realize that my knowledge on the field of infectious disease and in time series forecasting is very limited, but I took that as a learning opportunity.
 
 ## 1.2 Data set 
 This project works with confirmed Finnish Covid-19 case data sourced from the Finnish Institute of Health and Welfare (THL) website
@@ -132,11 +132,11 @@ The key data for this project was the time series on the weekly confirmed cases 
 
 This meant that there was no way to e.g. predict who might be at higher risk of contracting the disease or dying from it. The only use for the data set was to understand the current and past situation and related statistics, or to try to forecast the future weekly numbers of confirmed Covid-19 cases and/or deaths. 
 
-The population of Finland is about 5.5 million and we had it fairly easy in the beginning of the pandemic, so the total death toll of Covid-19 is currently at 860 (Source: Helsingin Sanomat, April 7th, 2021). The number of weekly deaths has not been rising as much as the infections due to vaccinations and risk group isolation recommendations. So, to predict the weekly deaths did not seem to make sense. 
+The population of Finland is about 5.5 million and we had it fairly easy in the beginning of the pandemic, so the total death toll of Covid-19 is currently at 860 (Source: Helsingin Sanomat, April 7th, 2021). The number of weekly deaths has not been rising as much as the infections due to vaccinations and risk group isolation recommendations. So, to predict the weekly deaths did not seem to make sense. So, I chose to predict the number of Covid-19 infections based on the available data. 
 
-I chose to predict the number of Covid-19 infections based on the available data. All but  one of the methods used in this project are univariate using just the past weekly number of confirmed Covid-19 cases. VAR (vector autoregression) method was the only one using the other available time series data in addition thetime series on confirmed cases. The last model developed was a combination model using the mean point forecasts of the other developed models.
+The methods used in the model development were Naïve (from here on just Naive), Simple Exponential smoothing (ses), ARIMA, and Multivariate VAR. All but one of the methods used in this project are univariate using just the past weekly number of confirmed Covid-19 cases. Multivariate VAR (vector autoregression) method was the only one using the other available time series data in addition the time series on confirmed cases. The last model developed was a combination model using the mean point forecasts of the other developed models. As the available data set including the validation data was just 59 weeks, I did not take seasonality into account in the models. Also, tuning of the models was limited. 
 
-The goal of this project was to build a forecast model on the development data set (90% of the available data) that forecasts 6 weeks of point forecasts on the validation data set (10 % or 6 weeks of the available historical data).
+The goal of this project was to build a forecast model on the development data set (90% of the available data) that forecasts 6 weeks of point forecasts on the validation data set (10 % of the available historical data).
 
 Target of the project was to build a point forecast model. The final result achieved with the best model using the Naive method resulted in time series cross-validation RMSE of 620 on the validation set. The six weeks point forecast was about 1750 cases lower than the observed values in the validation data set. In other words, the forecast did not perform well.  
 
@@ -155,7 +155,7 @@ The key steps that were performed:
 4. Choosing and fitting models
   + Starting with gaining a better understanding of time series and forecasting models related to time series
   + Forecasting models chosen were:
-    * A baseline using the Naïve method
+    * A baseline using the Naive method
     * Simple exponential smoothing method 
     * Auto ARIMA method
     * Multivariate vector autoregression (VAR) method
@@ -1063,6 +1063,7 @@ train_set <- combined_df %>%
 
 # Transforming the train & test set to time series format for analysis and 
 # model development
+# Adding metric of seven-day average for cases per 100 000 inhabitants
 train_n_test_set_data <- train_set %>%
   dplyr::select(wdate, 
                 year_week, 
@@ -1156,9 +1157,9 @@ ggseasonplot(train_n_test_set_tsdata[,"nr_deaths"], year.labels=TRUE, year.label
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
-This suggested also by the seasonal plot of the Covid-19 related deaths that has a spike starting with the week 11/2020 until week 18, but the size of the corresponding peak in the confirmed cases leading up to those weeks in 2020 was not proportional. At that time there was not enough testing capacity.
+This is suggested also by the seasonal plot of the Covid-19 related deaths that has a spike starting with the week 11/2020 until week 18, but the size of the corresponding peak in the confirmed cases leading up to those weeks in 2020 was not proportional. At that time there was not enough testing capacity.
 
-If you look at the plot below, where I have faceted the two data sets and marked the peaks in confirmed cases in red and peaks in deaths in blue, the size of the initial peak in confirmed cases is lower than you would expect, when comparing with the latter part of the data in the time series.
+If you look at the plot below, where I have faceted the two data sets and marked the peaks in confirmed cases in red and peaks in deaths in blue, the size of the initial peak in confirmed cases is lower than you would expect when contrasting with the corresponding peaks in the deaths in the latter part of the data.
 
 ```{r time-series-analyzes2, echo=FALSE, eval=TRUE, tidy = TRUE, size="small", results="asis", message=FALSE, warning=FALSE, crop = TRUE}
 
@@ -1190,7 +1191,7 @@ autoplot(train_n_test_set_tsdata[,3:8], facets=TRUE) +
   ggtitle("Faceted data points aligned by week")
 ```
 
-When we combine the different time series into a one plot we can see that the usage of the tool (used for screening for testing) never picked up to extend that it would have volumes higher than the number of people that were actually tested.
+When we combine the different time series into a one plot we can see that the usage of the tool (used for screening for testing) never picked up to extend that it would have volumes higher than the number of people that were actually tested. This is another reason that the data sets are not as useful as I hoped for.
 
 ```{r time-series-analyzes4, echo=FALSE, eval=TRUE, tidy = TRUE, size="small", results="asis", message=FALSE, warning=FALSE, crop = TRUE}
 # Looking at all the data points together
@@ -1212,18 +1213,18 @@ The conclusions from the matrix:
 
 * As the first three time series data are used to determine who should be tested it is to be expected that they have a fairly high correlation.   
 
-* Number of people vaccinated is so low and has been on-going for such a short time, that it is not going to have much impact on anything yet.
+* Number of people vaccinated is so low and has been on-going for such a short time, that it is not going to have much impact on anything yet. For this reason it is not used in the model development.
 
-When we look only at the weekly confirmed cases and deaths per 100 000 inhabitants, we can see that the number of deaths remains so low that forecasting it in this limited data set would be difficult. This is the reason why this project focuses on just on the point forecast of the confirmed Covid-19 cases.
+When we look only at the weekly confirmed cases and deaths per 100 000 inhabitants, we can see that the number of deaths remains so low that forecasting it in this limited data set would be difficult. This is the reason why this project focuses on the point forecast of the confirmed Covid-19 cases.
 
 ```{r time-series-analyzes6, echo=FALSE, eval=TRUE, tidy = TRUE, size="small", results="asis", message=FALSE, warning=FALSE, crop = TRUE}
 # Looking at the confirmed cases and deaths per 100 000 inhabitants
 autoplot(train_n_test_set_tsdata[,10:11]) +
-  ylab("Weekly number") + xlab("Week")+
+  ylab("Number reported") + xlab("Week")+
   ggtitle("The confirmed cases and deaths per 100k")
 ```
 
-As said the epidemic stayed at a fairly low level for most of 2020 and only recently reached tier labeled widespread (over 7 cases with the metric of seven-day average for cases per 100 000 inhabitants). As you can see from the plot below, the first time the threshold was surpassed was when the first cases of the mutated variants started spreading in Finland around November and December 2020. But after that the cases numbers appeared to go down during the holiday season (around Christmas and New Year). The cut-off point between the development and data set is right at the point, when the case numbers have started to decline again, but are under the highest threshold.
+As said the epidemic stayed at a fairly low level for most of 2020 and only recently reached tier labeled widespread (over 7 cases with the metric of seven-day average for cases per 100 000 inhabitants). As you can see from the plot below, the first time the threshold was surpassed was when the first cases of the mutated variants started spreading in Finland around November and December 2020. But after that the case numbers appeared to go down during the holiday season (around Christmas and New Year). The cut-off point between the development and data set is right at the point, when the case numbers have started to decline again, but are under the highest threshold.
 
 ```{r time-series-analyzes7, echo=FALSE, eval=TRUE, tidy = TRUE, size="small", results="asis", message=FALSE, warning=FALSE, crop = TRUE}
 # Adjusted case rate seven-day average for cases per 100 000 per 100 000 inhabitants
@@ -1291,9 +1292,9 @@ To a novice creating time series forecast model with this data set will be a rea
 
 ### 2.4.3 Forecasts with Naive Method
 
-To get started I created a baseline forecast on naive(), which forecasts the last observed value. The definition of naive method is that we simply set all forecasts to be the value of the last observation. The forecast was created for the 11 weeks following the time series in the training set and resulting point forecast was tested test set actual data for the same 11 weeks.
+To get started I created a baseline forecast on naive(), which forecasts the last observed value. The definition of naive method is that we simply set all forecasts to be the value of the last observation. The forecast was created for the 11 weeks following the time series in the training set and resulting point forecast was tested against the test set actual data for the same 11 weeks.
 
-To determine the best fit forecast method I run time series cross-validation on the development test set (including training and test sets) and checked the residuals of the point forecast based on the training set. After that I calculated the accuracy of the training set forecast using the 11 weeks test set. All model performance metrics were saved to a data frame to enable comparison between the models.
+To determine the best fit forecast method I ran the time series cross-validation on the development test set (including training and test sets) and checked the residuals of the point forecast based on the training set. After that I calculated the accuracy of the training set forecast using the 11 weeks test set. All model performance metrics were saved to a data frame to enable comparison between the models.
 
 ```{r naive, echo=FALSE, eval=TRUE, tidy = TRUE, size="small", results="asis", message=FALSE, warning=FALSE, crop = TRUE}
 ##########################################################
@@ -1395,7 +1396,7 @@ Conclusion:
 * The variations in the residuals do not stay the same over time,  
 * ACF of residuals suggests that naive model hasn't captured all the elements affecting the forecast,   
 * Residuals do not appear to be normally distributed,  
-* from Ljung-Box test with a small p-value (under 0,05). Thus, the null hypothesis of the test holds and we conclude that the data values are not independent.
+* from Ljung-Box test with a small p-value (under 0,05). Thus, the null hypothesis of the test holds and we conclude that the data values are not independent i.e. the residuals are not just white noise.
 
 I used autoplot() to visualize the point forecast results and compared them to the test set actuals. The red line is the actual test set data, black line is the mean point forecast and the fan shows the 95% and 80% prediction intervals.
 
@@ -1521,7 +1522,7 @@ Conclusion:
 * The variations in the residuals do not stay the same over time,  
 * ACF of residuals suggests that naive model has not captured all the elements affecting the forecast  
 * Residuals do not appear to be normally distributed,  
-* from Ljung-Box test with a small p-value (under 0,05). Thus, the null hypothesis of the test holds and we conclude that the data values are not independent.
+* from Ljung-Box test with a small p-value (under 0,05). Thus, the null hypothesis of the test holds and we conclude that the data values are not independent, i.e. the residuals are not just white noise.
 
 Below plot shows the visualization of the forecast results compared to the test set:
 
@@ -1641,7 +1642,7 @@ The conclusions from checking the residuals:
 * The variations in the residuals do not stay the same over time,  
 * ACF of residuals suggests that Arima model has captured all the elements affecting the forecast,   
 * Residuals do not appear to be normally distributed,  
-* from Ljung-Box test is that as the p-value is over 0.05. Thus, we fail to reject the null hypothesis of the test and conclude that the data values are independent.
+* from Ljung-Box test is that as the p-value is over 0.05. Thus, we reject the null hypothesis of the test and conclude that the data values are independent, i.e. the residuals are just white noise.
 
 Below plot shows the visualization of the point forecast results compared to the observed values in the test set:
 
@@ -1729,7 +1730,7 @@ test[["serial"]][["p.value"]]
 
 ```
 
-VAR(3) was chosen to fit as it passes the Portmanteau test, since the null of no autocorrelation cannot be rejected because the p-value is greater than the significance level of 0.05.
+VAR(3) was chosen to fit as it passes the Portmanteau test for serial autocorrelation, since the p-value is greater than the significance level of 0.05.
 
 ```{r var2, echo=FALSE, eval=TRUE, tidy = TRUE, size="small", results="asis", message=FALSE, warning=FALSE, crop = TRUE}
 # Forecasts for 11 weeks
@@ -1777,6 +1778,13 @@ From the results of the accuracy metrics we can see that the model performs the 
 Similarly to what we learned in the Machine Learning course in relation to predictions, the combinations of point forecast models produce typically the best results. (source: https://otexts.com/fpp2/combinations.html) Therefore, the last model I developed was a combination model. 
 
 I calculated the combination model simply by taking the mean point forecasts of each model and then took the average of those means. The plot below visualizes the results of the different models.
+
+I did try to run the checkresiduals() on the combination model, but it failed to find appropriate degrees of freedom for the model. I assume this due to the fact that the combination model even though it is a time series object, it is not a real forecast object.  
+```{r combination, echo=FALSE, eval=TRUE, tidy = TRUE, size="small", results="asis", message=FALSE, warning=FALSE, crop = TRUE}
+# Check residuals
+#checkresiduals(Combination)
+```
+
 
 Plotting the train set, test set and the combination model point forecasts alone looks like this.
 
@@ -2089,7 +2097,9 @@ i.e. the forecast was that much lower than the observed values in the validation
 ```{r conclusions_rmse_tscv, echo=FALSE, eval=TRUE, tidy = TRUE, size="small", results="asis", message=FALSE, warning=FALSE, crop = TRUE}
 round(RMSE_naive_v, digits = 0)
 ```
-In other words, the forecast model did not perform well. 
+In other words, the forecast model did not perform well. I struggled to determine how important the residuals analysis was compared with the forecast accuracy. My main concern was that as the residuals for both Naive and Simple Exponential Smoothing were not indicating a good forecasting method, should I have discarded those models and only used the models with residual p-values indicating white noise? This would have meant that I should have used the ARIMA for as the final model even though it had much worse time series cross-validation RMSE than the first two models. This is something that I will need to study up in the future.
+
+Another aspect that I did not manage to work out was the time series decomposition, i.e. if and how to deal with the trend, seasonality and cycles of the time series when developing the models using the different methods. Or if that was even possible with just 59 weeks of data. 
 
 Even though the models developed did not perform well, analyzing the available data gave me a better understanding of the changes in the trends. It also gave me a better ability to compare / contrast our situation with e.g. the situation in San Francisco, where my friend lives. The way the Covid-19 numbers are reported differs a little country by country. Here the numbers typically reported are absolute numbers, which are difficult to compare. I found the case rate seven-day average to be the easiest to comprehend and to contrast, but to get that I had to calculate it myself. 
 
